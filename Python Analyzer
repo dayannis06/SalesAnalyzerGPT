@@ -1,31 +1,57 @@
 import csv
+import os
 
-def calculate_total_sales(filename):
 
-# This function reads a CSV file and calculates the total sales.
+class SalesAnalyzer:
+	"""Analyze sales records loaded from a CSV file."""
 
-# It assumes the CSV has 'product_name', 'price', 'quantity' columns.
+	def __init__(self, filename):
+		"""Store the CSV filename and prepare the in-memory sales records."""
+		self.filename = filename
+		self.data = []
 
-total = 0.0
+	def load_data(self):
+		"""Load sales rows from the CSV file into memory."""
+		file_path = self.filename
+		if not os.path.exists(file_path):
+			fallback_path = os.path.join(os.path.dirname(__file__), "Python Sales")
+			if os.path.exists(fallback_path):
+				file_path = fallback_path
 
-with open(filename, mode='r') as file:
+		with open(file_path, mode="r") as file:
+			csv_reader = csv.DictReader(file)
+			self.data = list(csv_reader)
 
-csv_reader = csv.DictReader(file)
+	def calculate_total_sales(self):
+		"""Calculate the total revenue across all loaded sales rows."""
+		total = 0.0
 
-for row in csv_reader:
+		for row in self.data:
+			price = float(row["price"])
+			quantity = int(row["quantity"])
+			total += price * quantity
 
-price = float(row['price'])
+		return total
 
-quantity = int(row['quantity'])
+	def find_top_product(self):
+		"""Return the product with the highest total revenue from the loaded data."""
+		top_product = None
+		highest_sales = 0.0
 
-total += price * quantity
+		for row in self.data:
+			product_sales = float(row["price"]) * int(row["quantity"])
+			if product_sales > highest_sales:
+				highest_sales = product_sales
+				top_product = row["product_name"]
 
-return total
+		return top_product
+
 
 if __name__ == "__main__":
+	sales_data_file = "sales_data.csv"
+	analyzer = SalesAnalyzer(sales_data_file)
+	analyzer.load_data()
+	total_sales = analyzer.calculate_total_sales()
+	analyzer.find_top_product()
 
-sales_data_file = 'sales_data.csv'
-
-total_sales = calculate_total_sales(sales_data_file)
-
-print(f"Total sales from {sales_data_file}: ${total_sales:.2f}")
+	print(f"Total sales from {sales_data_file}: ${total_sales:.2f}")
